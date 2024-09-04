@@ -10,7 +10,7 @@ Here is an example compose file with scaling:
 
 ```yaml
 services:
-  worker:
+  runner:
     image: runner
     restart: always
     environment:
