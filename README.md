@@ -14,20 +14,20 @@ services:
     image: runner
     restart: always
     environment:
-      RUNNER_WORKDIR: /tmp/_work
+      RUNNER_WORKDIR: /tmp/runners
       RUNNER_GROUP: default
       RUNNER_SCOPE: 'org'
       ACCESS_TOKEN: ghp_...
       ORG_NAME: OCTOPUS
-      CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /tmp/_work/_actions
+      CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /tmp/actions
       LABELS: ubuntu-latest
     security_opt:
       # needed on SELinux systems to allow docker container to manage other docker containers
       - label:disable
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
-      - '/tmp/_work:/tmp/_work'
-      - '/tmp/_work/_actions:/tmp/_work/_actions'
+      - '/tmp/runners:/tmp/runners'
+      - '/tmp/actions:/tmp/actions'
       # note: a quirk of docker-in-docker is that this path
       # needs to be the same path on host and inside the container,
       # docker management cmd´s run outside of docker but expect the paths from within
