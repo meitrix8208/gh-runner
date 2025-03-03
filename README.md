@@ -34,5 +34,5 @@ services:
 ```
 
 [compose file v2 scale]: https://docs.docker.com/compose/compose-file/compose-file-v2/#scale
-[docker-compose up --scale SERVICE=NUM]: https://docs.docker.com/compose/reference/up/
+[docker compose up --scale SERVICE=NUM]: https://docs.docker.com/compose/reference/up/
 [myoung34/docker-github-actions-runner]: https://github.com/myoung34/docker-github-actions-runner
