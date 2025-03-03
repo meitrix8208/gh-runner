@@ -7,3 +7,4 @@ RUN chmod +x /entrypoint-wrapper.sh
 ENTRYPOINT ["/entrypoint-wrapper.sh"]
 CMD ["/actions-runner/bin/runsvc.sh"]
 VOLUME /tmp/github-actions
+LABEL RUNNER="true"

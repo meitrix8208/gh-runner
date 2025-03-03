@@ -2,7 +2,7 @@
 
 This image is an extension of [myoung34/docker-github-actions-runner] that:
 
-- Supports scaling via [docker-compose up --scale SERVICE=NUM] or the [compose file v2 scale] option.
+- Supports scaling via [docker compose up --scale SERVICE=NUM] or the [compose file v2 scale] option.
 
 ## Usage
 
