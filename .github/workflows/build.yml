@@ -3,7 +3,8 @@ name: Docker Publish
 on:
   push:
     branches: [ "main" ]
-    paths-ignore: [ 'README.md' ]
+    paths-ignore:
+      - "README.md"
     # También puedes agregar tags para publicar versiones específicas
     tags: [ 'v*' ]
   # Opcionalmente, permitir ejecución manual desde la interfaz de GitHub
