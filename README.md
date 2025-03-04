@@ -14,12 +14,13 @@ services:
     image: runner
     restart: always
     environment:
-      RUNNER_WORKDIR: /tmp/runners
+      RUNNER_WORKDIR: /tmp/runners/work
       RUNNER_GROUP: default
       RUNNER_SCOPE: 'org'
       ACCESS_TOKEN: ghp_...
       ORG_NAME: OCTOPUS
       CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /tmp/actions
+      DISABLE_AUTOMATIC_DEREGISTRATION: true
       LABELS: ubuntu-latest
     security_opt:
       # needed on SELinux systems to allow docker container to manage other docker containers
