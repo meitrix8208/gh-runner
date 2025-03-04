@@ -21,6 +21,7 @@ services:
       ORG_NAME: OCTOPUS
       CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /tmp/actions
       DISABLE_AUTOMATIC_DEREGISTRATION: true
+      RANDOM_RUNNER_SUFFIX: false
       LABELS: ubuntu-latest
     security_opt:
       # needed on SELinux systems to allow docker container to manage other docker containers
