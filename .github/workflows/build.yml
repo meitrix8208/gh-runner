@@ -3,12 +3,15 @@ name: Docker Publish
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - "README.md"
+    paths:
+      - 'Dockerfile'
     # También puedes agregar tags para publicar versiones específicas
     tags: [ 'v*' ]
   # Opcionalmente, permitir ejecución manual desde la interfaz de GitHub
   workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0"
+
 env:
   # Establecer repositorio de Docker Hub como predeterminado
   REGISTRY: docker.io
