@@ -1,6 +1,7 @@
 # GitHub Actions Runner
 
-This image is an extension of [myoung34/docker-github-actions-runner] that:
+This image is an extension of [myoung34/docker-github-actions-runner] 
+and [ixc/github-actions-runner-docker] that:
 
 - Supports scaling via [docker compose up --scale SERVICE=NUM] or the [compose file v2 scale] option.
 
@@ -38,3 +39,4 @@ services:
 [compose file v2 scale]: https://docs.docker.com/compose/compose-file/compose-file-v2/#scale
 [docker compose up --scale SERVICE=NUM]: https://docs.docker.com/compose/reference/up/
 [myoung34/docker-github-actions-runner]: https://github.com/myoung34/docker-github-actions-runner
+[ixc/github-actions-runner-docker]: https://github.com/ixc/github-actions-runner-docker
