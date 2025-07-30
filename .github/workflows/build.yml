@@ -9,6 +9,11 @@ on:
     tags: [ 'v*' ]
   # Opcionalmente, permitir ejecución manual desde la interfaz de GitHub
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión específica para compilar (sin el prefijo v)'
+        required: false
+        type: string
   schedule:
     - cron: "0 5 * * 0"
 
@@ -19,7 +24,77 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.check-tags.outputs.new_version }}
+      found_new_tag: ${{ steps.check-tags.outputs.found_new_tag }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Check for new tags
+        id: check-tags
+        run: |
+          # Crear archivo para almacenar la última versión procesada
+          LAST_VERSION_FILE=".last_version"
+          
+          # Si se proporciona una versión específica, usarla
+          if [ ! -z "${{ github.event.inputs.version }}" ]; then
+            echo "Se solicitó compilar la versión: ${{ github.event.inputs.version }}"
+            echo "new_version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "found_new_tag=true" >> $GITHUB_OUTPUT
+            echo "${{ github.event.inputs.version }}" > $LAST_VERSION_FILE
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add $LAST_VERSION_FILE
+            git commit -m "Actualizar última versión a ${{ github.event.inputs.version }}" || true
+            git push || true
+            exit 0
+          fi
+          
+          # Si no existe el archivo, crear con versión vacía
+          if [ ! -f $LAST_VERSION_FILE ]; then
+            echo "" > $LAST_VERSION_FILE
+          fi
+          
+          LAST_VERSION=$(cat $LAST_VERSION_FILE)
+          
+          # Obtener los tags del repositorio padre ordenados por fecha (más reciente primero)
+          TAGS=$(curl -s https://api.github.com/repos/myoung34/docker-github-actions-runner/tags | jq -r '.[].name' | sort -Vr)
+          
+          # Obtener el tag más reciente (sin el prefijo v)
+          LATEST_TAG=$(echo "$TAGS" | head -n 1 | sed 's/^v//')
+          
+          echo "Última versión procesada: $LAST_VERSION"
+          echo "Versión más reciente disponible: $LATEST_TAG"
+          
+          # Comprobar si hay una nueva versión
+          if [ "$LATEST_TAG" != "$LAST_VERSION" ] && [ ! -z "$LATEST_TAG" ]; then
+            echo "¡Se encontró una nueva versión: $LATEST_TAG!"
+            echo "new_version=$LATEST_TAG" >> $GITHUB_OUTPUT
+            echo "found_new_tag=true" >> $GITHUB_OUTPUT
+            
+            # Actualizar el archivo de última versión
+            echo "$LATEST_TAG" > $LAST_VERSION_FILE
+            
+            # Guardar cambios en el repositorio
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add $LAST_VERSION_FILE
+            git commit -m "Actualizar última versión a $LATEST_TAG" || true
+            git push || true
+          else
+            echo "No se encontraron nuevas versiones o la versión más reciente ya fue procesada."
+            echo "found_new_tag=false" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
   build-and-push:
+    needs: check-tags
+    # Solo ejecutar si se encontró una nueva versión O si es un push manual/programado
+    if: needs.check-tags.outputs.found_new_tag == 'true' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     # Agregar esta línea si quieres que corra en tus runners personalizados
     # runs-on: [self-hosted, ubuntu-latest]
@@ -27,39 +102,44 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
       # Configurar Buildx para compilación multi-plataforma
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
+        
       # Iniciar sesión en Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+          
       # Extraer metadata para etiquetas Docker
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: latest
-
-
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=v${{ needs.check-tags.outputs.new_version }},enable=${{ needs.check-tags.outputs.found_new_tag == 'true' }}
+            
       # Construir y publicar la imagen
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            RUNNER_VERSION=${{ needs.check-tags.outputs.new_version || 'latest' }}
