@@ -5,9 +5,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'Dockerfile'
-    # También puedes agregar tags para publicar versiones específicas
-    tags: [ 'v*' ]
-  # Opcionalmente, permitir ejecución manual desde la interfaz de GitHub
+      - 'entrypoint-wrapper.sh'
   workflow_dispatch:
     inputs:
       version:
@@ -143,3 +141,11 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             RUNNER_VERSION=${{ needs.check-tags.outputs.new_version || 'latest' }}
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    name: Keep Workflow Alive
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1
